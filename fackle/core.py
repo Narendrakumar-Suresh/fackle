@@ -1,5 +1,4 @@
 import jax
-import jax.numpy as jnp
 import jax.tree_util as jtu
 import optax
 from types import SimpleNamespace
@@ -58,11 +57,7 @@ def filter_tree(tree, keep_cls):
 
         return x
 
-    return jax.tree_util.tree_map(
-        fn,
-        tree,
-        is_leaf=lambda x: isinstance(x, Variable)
-    )
+    return jax.tree_util.tree_map(fn, tree, is_leaf=lambda x: isinstance(x, Variable))
 
 
 def merge_trees(*trees):
@@ -77,11 +72,7 @@ def merge_trees(*trees):
 
         return xs[0]
 
-    return jax.tree_util.tree_map(
-        fn,
-        *trees,
-        is_leaf=lambda x: isinstance(x, Variable)
-    )
+    return jax.tree_util.tree_map(fn, *trees, is_leaf=lambda x: isinstance(x, Variable))
 
 
 # ----------------------------
@@ -132,19 +123,14 @@ class Module:
         return obj
 
     def __repr__(self):
-        public = {
-            k: v for k, v in vars(self).items()
-            if not k.startswith("_")
-        }
+        public = {k: v for k, v in vars(self).items() if not k.startswith("_")}
         return f"{self.__class__.__name__}({public})"
 
     # ----------------------------
     # Forward API
     # ----------------------------
     def __call__(self, *args, **kwargs):
-        raise NotImplementedError(
-            f"{self.__class__.__name__} must implement __call__"
-        )
+        raise NotImplementedError(f"{self.__class__.__name__} must implement __call__")
 
     # ----------------------------
     # PyTorch-like helpers
@@ -192,8 +178,7 @@ class Module:
                 return loss, new_stats
 
             (loss, new_stats), grads = jax.value_and_grad(
-                loss_and_new_state,
-                has_aux=True
+                loss_and_new_state, has_aux=True
             )(params)
 
             return loss, grads, new_stats
@@ -217,7 +202,7 @@ class Module:
             backward_kernel=backward_kernel,
             step_kernel=step_kernel,
             use_jit=use_jit,
-            optimizer=tx,          # new
+            optimizer=tx,  # new
             loss_fn=loss_fn_impl,  # new
         )
 
@@ -268,11 +253,7 @@ class Module:
         if t.grads is None:
             raise RuntimeError("No gradients found. Call backward first.")
 
-        new_params, new_opt_state = t.step_kernel(
-            t.params,
-            t.opt_state,
-            t.grads
-        )
+        new_params, new_opt_state = t.step_kernel(t.params, t.opt_state, t.grads)
 
         new_stats = t.new_stats if t.new_stats is not None else t.stats
 
@@ -302,11 +283,6 @@ class Module:
         Eager mode:
             loss = model.train_step(x, y, tx, loss_fn)
         """
-        loss = self.backward(
-            x,
-            y,
-            tx=tx,
-            loss_fn=loss_fn
-        )
+        loss = self.backward(x, y, tx=tx, loss_fn=loss_fn)
         self.step()
         return loss
