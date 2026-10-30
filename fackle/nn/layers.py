@@ -1,4 +1,4 @@
-from .core import Module, Parameter, Buffer
+from fackle.core import Module, Parameter, Buffer
 import jax
 import jax.numpy as jnp
 from typing import Union, Tuple, Sequence, Optional
