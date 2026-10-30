@@ -2,16 +2,19 @@ from fackle.core import Module, Parameter, Buffer
 import jax
 import jax.numpy as jnp
 from typing import Union, Tuple, Sequence, Optional
+from fackle import random
 
 
 class Linear(Module):
-    def __init__(self, din, dout):
+    def __init__(self, din, dout, key=None):
         self.din = din
         self.dout = dout
 
-        self.kernel = Parameter(jnp.ones((din, dout)))
-        self.bias = Parameter(jnp.zeros((dout,)))
+        k = key or random.next_key()
+        scale = jnp.sqrt(2.0 / din)  # He init
 
+        self.kernel = Parameter(jax.random.normal(k, (din, dout)) * scale)
+        self.bias = Parameter(jnp.zeros((dout,)))
         self.call_count = Buffer(jnp.array(0))
 
     def __call__(self, x: jax.Array):
@@ -46,10 +49,10 @@ class Conv1D(Module):
         k_shape = self.kernel_size + (in_channels, out_channels)
         scale = jnp.sqrt(2.0 / (in_channels * self.kernel_size[0]))
 
-        k1, _ = jax.random.split(key or jax.random.PRNGKey(0))
+        k = key or random.next_key()
 
         # Wrapped in Parameter so Fackel tracks them for gradients & optimization
-        self.weight = Parameter(jax.random.normal(k1, k_shape) * scale)
+        self.weight = Parameter(jax.random.normal(k, k_shape) * scale)
         self.bias = Parameter(jnp.zeros((1, 1, out_channels))) if use_bias else None
 
     def __call__(self, x: jax.Array) -> jax.Array:
@@ -98,9 +101,9 @@ class Conv2D(Module):
             2.0 / (in_channels * self.kernel_size[0] * self.kernel_size[1])
         )
 
-        k1, _ = jax.random.split(key or jax.random.PRNGKey(0))
+        k = key or random.next_key()
 
-        self.weight = Parameter(jax.random.normal(k1, k_shape) * scale)
+        self.weight = Parameter(jax.random.normal(k, k_shape) * scale)
         self.bias = Parameter(jnp.zeros((1, 1, 1, out_channels))) if use_bias else None
 
     def __call__(self, x: jax.Array) -> jax.Array:
@@ -151,9 +154,9 @@ class Conv3D(Module):
         k_shape = self.kernel_size + (in_channels, out_channels)
         scale = jnp.sqrt(2.0 / (in_channels * jnp.prod(jnp.array(self.kernel_size))))
 
-        k1, _ = jax.random.split(key or jax.random.PRNGKey(0))
+        k = key or random.next_key()
 
-        self.weight = Parameter(jax.random.normal(k1, k_shape) * scale)
+        self.weight = Parameter(jax.random.normal(k, k_shape) * scale)
         self.bias = (
             Parameter(jnp.zeros((1, 1, 1, 1, out_channels))) if use_bias else None
         )
