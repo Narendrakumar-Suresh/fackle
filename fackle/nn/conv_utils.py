@@ -60,7 +60,7 @@ class AvgPool1D(Module):
             window_strides=(1, *self.stride, 1),
             padding=self.padding,
         )
-        return summed / math.prod(*self.window)
+        return summed / math.prod(self.window)
 
 
 class MinPool1D(Module):
@@ -121,7 +121,7 @@ class AvgPool2D(Module):
             window_strides=(1, *self.stride, 1),
             padding=self.padding,
         )
-        return summed / math.prod(*self.window)
+        return summed / math.prod(self.window)
 
 
 class MinPool2D(Module):
@@ -182,7 +182,7 @@ class AvgPool3D(Module):
             window_strides=(1, *self.stride, 1),
             padding=self.padding,
         )
-        return summed / math.prod(*self.window)
+        return summed / math.prod(self.window)
 
 
 class MinPool3D(Module):
